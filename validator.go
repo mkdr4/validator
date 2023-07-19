@@ -18,7 +18,7 @@ func initTV(data interface{}, validType reflect.Kind) (t reflect.Type, v reflect
 	}
 
 	if t.Kind() != validType {
-		return t, v, fmt.Errorf(errs.TYPE_ERROR)
+		return t, v, fmt.Errorf("")
 	}
 
 	return t, v, nil
