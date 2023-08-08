@@ -18,23 +18,30 @@ func initTV(data interface{}, validType reflect.Kind) (t reflect.Type, v reflect
 	}
 
 	if t.Kind() != validType {
-		return t, v, fmt.Errorf("")
+		return t, v, fmt.Errorf(errs.VARIABLE_NOT_STRUCT)
 	}
 
 	return t, v, nil
 }
 
 func Struct(data interface{}) error {
+	return iterateStruct(data)
+}
+
+func iterateStruct(data interface{}) error {
 	t, v, err := initTV(data, reflect.Struct)
 	if err != nil {
-		return fmt.Errorf(errs.VARIABLE_NOT_STRUCT)
+		return err
 	}
 
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		value := v.Field(i)
+
 		if value.Kind() == reflect.Struct {
-			return Struct(data)
+			if err := iterateStruct(value.Interface()); err != nil {
+				return err
+			}
 		}
 
 		if validParams := field.Tag.Get("valid"); validParams != "" {
