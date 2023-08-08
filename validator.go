@@ -25,10 +25,10 @@ func initTV(data interface{}, validType reflect.Kind) (t reflect.Type, v reflect
 }
 
 func Struct(data interface{}) error {
-	return iterateStruct(data)
+	return iterateStruct(data, "")
 }
 
-func iterateStruct(data interface{}) error {
+func iterateStruct(data interface{}, path string) error {
 	t, v, err := initTV(data, reflect.Struct)
 	if err != nil {
 		return err
@@ -38,8 +38,15 @@ func iterateStruct(data interface{}) error {
 		field := t.Field(i)
 		value := v.Field(i)
 
+		fieldPath := ""
+		if path == "" {
+			fieldPath += field.Name
+		} else {
+			fieldPath += path + "." + field.Name
+		}
+
 		if value.Kind() == reflect.Struct {
-			if err := iterateStruct(value.Interface()); err != nil {
+			if err := iterateStruct(value.Interface(), fieldPath); err != nil {
 				return err
 			}
 		}
@@ -51,20 +58,20 @@ func iterateStruct(data interface{}) error {
 				switch paramsName {
 				case "required":
 					if !check.RequiredCompliance(value) {
-						return fmt.Errorf(errs.REQUIRES_VALUE_ABSENT, field.Name)
+						return fmt.Errorf(errs.REQUIRES_VALUE_ABSENT, fieldPath)
 					}
 				case "max":
 					if len(ps) > 1 {
 						paramsValue := ps[1]
 						if !check.MinMaxLenCompliance(value, paramsValue, consts.MaxMode) {
-							return fmt.Errorf(errs.LENGTH_VALUE_INCORRECT, field.Name)
+							return fmt.Errorf(errs.LENGTH_VALUE_INCORRECT, fieldPath)
 						}
 					}
 				case "min":
 					if len(ps) > 1 {
 						paramsValue := ps[1]
 						if !check.MinMaxLenCompliance(value, paramsValue, consts.MinMode) {
-							return fmt.Errorf(errs.LENGTH_VALUE_INCORRECT, field.Name)
+							return fmt.Errorf(errs.LENGTH_VALUE_INCORRECT, fieldPath)
 						}
 					}
 				}
